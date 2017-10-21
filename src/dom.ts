@@ -1,7 +1,5 @@
 // tslint:disable:no-conditional-assignment
-type EL = HTMLElement
-
-export function isObject (val) {
+function isObject (val) {
   return Object.prototype.toString.call(val) === '[object Object]'
 }
 
@@ -20,7 +18,7 @@ export class VNode {
   }
 }
 
-export function h (type: string | Function, props?: any, ...stack: any[]) {
+function h (type: string | Function, props?: any, ...stack: any[]) {
   const children = []
   let c
 
@@ -39,7 +37,7 @@ export function h (type: string | Function, props?: any, ...stack: any[]) {
     : new VNode(type, props, children)
 }
 
-export function classNames (classNames?: string | Object, obj?: Object) {
+function classNames (classNames?: string | Object, obj?: Object) {
   isObject(classNames) ? ([ obj, classNames ] = [ classNames, '' ]) : ([obj] = [{}])
 
   return (`${classNames} ` +
@@ -50,73 +48,49 @@ export function classNames (classNames?: string | Object, obj?: Object) {
   ).trim()
 }
 
-const removeElement = ($el: EL) => {
+const removeElement = ($el: HTMLElement) => {
   let c
-  while ((c = $el.firstChild)) {
-    $el.removeChild(c)
-  }
+  while ((c = $el.firstChild)) $el.removeChild(c)
 }
 
-export const negate = fn => (...x) => !fn(...x)
-
-export const eachPair = (obj, fn) =>
-  Object.entries(obj).forEach(([ key, val ]) => fn(key, val))
-
-export const curry = (fn, ...args1) => (...args2) => fn(...args1, ...args2)
-
-const isEventProp = s => /^on/.test(s)
-
-const extractEventName = (s: string) => s.slice(2).toLowerCase()
-
-export const isCustomProp = name => {
-  return isEventProp(name) || name === 'forceUpdate'
+function isEventProp (s: string) {
+  return /^on/.test(s)
 }
 
-export const setProp = ($el: EL, name, value) => {
+function setAttribute ($el: HTMLElement, name: string, value) {
   if (isEventProp(name)) return
   typeof value === 'boolean' && ($el[name] = value)
   $el.setAttribute(name, value)
 }
 
-export const removeProp = ($el, name, value) => {
-  if (isEventProp(name)) return
-
-  $el[name] = false
-  $el.removeAttribute(name)
+function setProps ($el: HTMLElement, props: Object) {
+  for (const [ name, val ] of Object.entries(props)) {
+    setAttribute($el, name, val)
+  }
 }
 
-export function setProps ($el: EL, props) {
-  eachPair(props, curry(setProp, $el))
+function addEventListeners ($el: HTMLElement, props: Object) {
+  for (const name of Object.keys(props).filter(isEventProp)) {
+    $el.addEventListener(name.slice(2).toLowerCase(), props[name])
+  }
 }
 
-export const addEventListeners = ($el, props) => {
-  Object.entries(props)
-    .filter(isEventProp)
-    .forEach(([ name, prop ]) => {
-      $el.addEventListener(extractEventName(name), prop)
-    })
-}
-
-export const createElement = (node: VNode | string): HTMLElement | Text => {
+function createElement (node: VNode | string): HTMLElement | Text {
   if (typeof node === 'string') {
-    return document.createTextNode(node as string)
+    return document.createTextNode(node)
   }
 
-  const { type, children, props } = node as VNode
-  const $el: HTMLElement = document.createElement(type)
-
-  setProps($el, props)
-  addEventListeners($el, props)
-  children.map(createElement).forEach($el.appendChild.bind($el))
+  const $el = document.createElement(node.type)
+  setProps($el, node.props)
+  addEventListeners($el, node.props)
+  node.children.map(createElement).forEach($el.appendChild.bind($el))
   return $el
 }
 
-export const render = (element: VNode, container: HTMLElement, callback?) => {
-  updateElement(container, element)
-}
-
-export const updateElement = ($target: EL, vnode: VNode) => {
+function render ($target: HTMLElement, vnode: VNode) {
   let $el
   removeElement($target)
   return ($el = $target.insertBefore(createElement(vnode), $el))
 }
+
+export { h, render, classNames }

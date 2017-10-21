@@ -1,4 +1,4 @@
-import { h, updateElement } from './dom'
+import { h, render } from './dom'
 import { View, View2 } from './view'
 
 const store = {
@@ -21,15 +21,15 @@ const $app = document.getElementById('app')
 let i = 0
 document.getElementById('reload').addEventListener('click', () => {
   if (++i % 2 === 1) {
-    updateElement($app, view2)
+    render($app, view2)
   } else {
-    updateElement($app, view)
+    render($app, view)
   }
 
-  // updateElement($app, h('div', null, 'hello'), view)
+  // render($app, h('div', null, 'hello'), view)
 })
 
-updateElement($app, view)
+render($app, view)
 
 Array.from(document.querySelectorAll('label')).forEach(a => {
   a.innerHTML = a.innerHTML + '[foo]'
