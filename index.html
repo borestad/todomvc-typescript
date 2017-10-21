@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Template • TodoMVC</title>
+  <!-- <link rel="stylesheet" href="https://unpkg.com/todomvc-common@1.0.4/base.css">
+  <link rel="stylesheet" href="https://unpkg.com/todomvc-app-css@2.1.0/index.css"> -->
+  <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+  <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+  <!-- CSS overrides - remove if you don't need it -->
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+      .item {
+        background: yellow;
+        margin: 10px 0;
+      }
+
+      .item2 {
+        background: green;
+      }
+
+      #reload {
+        position:fixed;
+        top: 5px;
+        left: 5px;
+      }
+  </style>
+</head>
+
+<body>
+  <button id="reload">Reload</button>
+
+  <div id="app"></div>
+  <!-- Scripts here. Don't remove ↓ -->
+  <!-- <button id="reload">RELOAD</button> -->
+  <div id="root"></div>
+
+  <!-- <script src="https://unpkg.com/todomvc-common@1.0.4/base.js"></script> -->
+  <script src="node_modules/todomvc-common/base.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,54 @@
+{
+  "compilerOptions": {
+    "watch": false,
+    "pretty": true,
+    "declaration": false,
+    "listEmittedFiles": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "listFiles": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "noLib": false,
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "outDir": ".tmp/code",
+    "removeComments": true,
+    "sourceMap": false,
+    "strictNullChecks": false,
+    "target": "es6",
+    "types": ["node", "jest"],
+    "allowJs": false,
+    "importHelpers": true,
+    "jsx": "react",
+    "jsxFactory": "h",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["src/*"]
+    }
+  },
+  "exclude": [
+    ".tmp",
+    "node_modules",
+    "dist"
+  ],
+  "filesGlob": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "awesomeTypescriptLoaderOptions": {
+    "useCache": false,
+    "useBabel": true,
+    "cacheDirectory": ".tmp/tscache",
+    "silent": true,
+    "useTranspileModule": false,
+    "transpileOnly": false
+  }
+}
