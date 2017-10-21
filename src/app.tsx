@@ -26,7 +26,7 @@ document.getElementById('reload').addEventListener('click', () => {
     updateElement($app, view)
   }
 
-  updateElement($app, h('div', null, 'hello'), view)
+  // updateElement($app, h('div', null, 'hello'), view)
 })
 
 updateElement($app, view)

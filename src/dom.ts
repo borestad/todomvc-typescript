@@ -57,6 +57,13 @@ const removeElement = ($el: EL) => {
   }
 }
 
+export const negate = fn => (...x) => !fn(...x)
+
+export const eachPair = (obj, fn) =>
+  Object.entries(obj).forEach(([ key, val ]) => fn(key, val))
+
+export const curry = (fn, ...args1) => (...args2) => fn(...args1, ...args2)
+
 const isEventProp = s => /^on/.test(s)
 
 const extractEventName = (s: string) => s.slice(2).toLowerCase()
@@ -65,51 +72,29 @@ export const isCustomProp = name => {
   return isEventProp(name) || name === 'forceUpdate'
 }
 
-export const setProp = ($el, name, value) => {
-  if (isCustomProp(name)) {
-    return
-  } else if (name === 'className') {
-    $el.setAttribute('class', value)
-  } else if (typeof value === 'boolean') {
-    $el[name] = value
-    value && $el.setAttribute(name, value)
-  } else {
-    $el.setAttribute(name, value)
-  }
+export const setProp = ($el: EL, name, value) => {
+  if (isEventProp(name)) return
+  typeof value === 'boolean' && ($el[name] = value)
+  $el.setAttribute(name, value)
 }
 
 export const removeProp = ($el, name, value) => {
-  if (isCustomProp(name)) return
-  if (name === 'className') name = 'class'
+  if (isEventProp(name)) return
 
   $el[name] = false
   $el.removeAttribute(name)
 }
 
-export const setProps = ($el, props) => {
-  for (const [ name, val ] of Object.entries(props)) {
-    setProp($el, name, val)
-  }
-}
-
-export const updateProp = ($el, name, newVal, oldVal) => {
-  if (!newVal) {
-    removeProp($el, name, oldVal)
-  } else if (!oldVal || newVal !== oldVal) {
-    setProp($el, name, newVal)
-  }
-}
-
-export const updateProps = ($el: HTMLElement, newProps, oldProps) => {
-  for (const name of Object.keys({ ...newProps, ...oldProps })) {
-    updateProp($el, name, newProps[name], oldProps[name])
-  }
+export function setProps ($el: EL, props) {
+  eachPair(props, curry(setProp, $el))
 }
 
 export const addEventListeners = ($el, props) => {
-  for (const name of Object.keys(props).filter(isEventProp)) {
-    $el.addEventListener(extractEventName(name), props[name])
-  }
+  Object.entries(props)
+    .filter(isEventProp)
+    .forEach(([ name, prop ]) => {
+      $el.addEventListener(extractEventName(name), prop)
+    })
 }
 
 export const createElement = (node: VNode | string): HTMLElement | Text => {
@@ -130,28 +115,8 @@ export const render = (element: VNode, container: HTMLElement, callback?) => {
   updateElement(container, element)
 }
 
-export const updateElement = (
-  $root: HTMLElement,
-  vnode?: VNode,
-  oldVnode?: VNode,
-  index = 0
-) => {
+export const updateElement = ($target: EL, vnode: VNode) => {
   let $el
-  const $node = $root.childNodes[index] as HTMLElement
-
-  if (!oldVnode && vnode) {
-    removeElement($root)
-    $el = $root.insertBefore(createElement(vnode), $el)
-  }
-  //  else if (!vnode) {
-  //   $root.removeChild($node)
-  // } else if (hasNodeChanged(vnode, oldVnode)) {
-  //   $root.replaceChild(createElement(vnode), $node)
-  // } else if (vnode.type) {
-  //   updateProps($node, vnode.props, oldVnode.props)
-  //   const len = Math.min(vnode.children.length, oldVnode.children.length)
-
-  //   for (let i = 0; i < len; i++)
-  //     updateElement($node, vnode.children[i], oldVnode.children[i], i)
-  // }
+  removeElement($target)
+  return ($el = $target.insertBefore(createElement(vnode), $el))
 }
