@@ -39,15 +39,6 @@ export function h (type: string | Function, props?: any, ...stack: any[]) {
     : new VNode(type, props, children)
 }
 
-// ==============================================
-// HOC & HELPERS
-// ==============================================
-
-export const negate = fn => (...x) => !fn(...x)
-
-export const eachPair = (obj, fn) =>
-  Object.entries(obj).forEach(([ key, val ]) => fn(key, val))
-
 export function classNames (classNames?: string | Object, obj?: Object) {
   isObject(classNames) ? ([ obj, classNames ] = [ classNames, '' ]) : ([obj] = [{}])
 
@@ -70,11 +61,16 @@ const isEventProp = s => /^on/.test(s)
 
 const extractEventName = (s: string) => s.slice(2).toLowerCase()
 
-// ==============================================
-// DOM HELPERS
-// ==============================================
+export const isCustomProp = name => {
+  return isEventProp(name) || name === 'forceUpdate'
+}
+
 export const setProp = ($el, name, value) => {
-  if (typeof value === 'boolean') {
+  if (isCustomProp(name)) {
+    return
+  } else if (name === 'className') {
+    $el.setAttribute('class', value)
+  } else if (typeof value === 'boolean') {
     $el[name] = value
     value && $el.setAttribute(name, value)
   } else {
@@ -83,6 +79,7 @@ export const setProp = ($el, name, value) => {
 }
 
 export const removeProp = ($el, name, value) => {
+  if (isCustomProp(name)) return
   if (name === 'className') name = 'class'
 
   $el[name] = false
