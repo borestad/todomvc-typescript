@@ -1,12 +1,14 @@
 // tslint:disable:no-conditional-assignment
-function isObject (val) {
-  return Object.prototype.toString.call(val) === '[object Object]'
-}
+const { entries, keys } = Object
+const { isArray } = Array
+
+const isObject = v => v != null && typeof v === 'object' && !isArray(v)
+const toEventName = (s: string) => s.slice(2).toLowerCase()
 
 // ==============================================
 // VDOM HELPERS
 // ==============================================
-export class VNode {
+class VNode {
   type: string
   props: object
   children: any[]
@@ -16,20 +18,25 @@ export class VNode {
     this.props = props
     this.children = children
   }
+  VNode: true
 }
 
 function h (type: string | Function, props?: any, ...stack: any[]) {
   const children = []
   let c
+  console.log(arguments.length)
 
-  props = props || {}
-  props.children && delete props.children
+  if (props != null && !isObject(props)) {
+    props = void 0
+    stack = [...arguments].slice(1)
+  }
+
+  (props = props || {}).children && delete props.children
   stack.length > 1 && stack.reverse()
 
-  while (stack.length) {
-    if ((c = stack.pop()))
-      if (c.pop) stack.push(...(c.length > 1 ? c.reverse() : c))
-      else if (true !== c) children.push(c.toFixed ? '' + c : c)
+  while (stack.length && (c = stack.pop())) {
+    if (c.pop) stack.push(...(c.length > 1 ? c.reverse() : c))
+    else if (true !== c) children.push(c.toFixed ? '' + c : c)
   }
 
   return (type as Function).call
@@ -41,7 +48,7 @@ function classNames (classNames?: string | Object, obj?: Object) {
   isObject(classNames) ? ([ obj, classNames ] = [ classNames, '' ]) : ([obj] = [{}])
 
   return (`${classNames} ` +
-    Object.entries(obj)
+    entries(obj)
       .filter(([ , val ]) => val && typeof val === 'boolean')
       .map(([className]) => className)
       .join(' ')
@@ -53,37 +60,43 @@ const removeElement = ($el: HTMLElement) => {
   while ((c = $el.firstChild)) $el.removeChild(c)
 }
 
-function isEventProp (s: string) {
-  return /^on/.test(s)
+function isEventProp (value?) {
+  return /^on/.test(value)
 }
 
-function setAttribute ($el: HTMLElement, name: string, value) {
+function setProp ($el: HTMLElement, name: string, value) {
   if (isEventProp(name)) return
-  typeof value === 'boolean' && ($el[name] = value)
+  if (name === 'class' && !value) return
+  if (value === 'boolean') $el[name] = value
   $el.setAttribute(name, value)
 }
 
 function setProps ($el: HTMLElement, props: Object) {
-  for (const [ name, val ] of Object.entries(props)) {
-    setAttribute($el, name, val)
-  }
+  entries(props).forEach(([ p, v ]) => setProp($el, p, v))
 }
 
 function addEventListeners ($el: HTMLElement, props: Object) {
-  for (const name of Object.keys(props).filter(isEventProp)) {
-    $el.addEventListener(name.slice(2).toLowerCase(), props[name])
+  const events = entries(props).filter(([k]) => isEventProp(k))
+
+  for (const [ event, handler ] of events) {
+    on(toEventName(event), $el)(handler)
   }
 }
 
-function createElement (node: VNode | string): HTMLElement | Text {
-  if (typeof node === 'string') {
-    return document.createTextNode(node)
+const on = (type: string, $el: HTMLElement) => (fn: EventListener) => {
+  $el.addEventListener(type, fn, true)
+  return () => $el.removeEventListener(type, fn, true)
+}
+
+function createElement (vnode: VNode | string): HTMLElement | Text {
+  if (typeof vnode === 'string') {
+    return document.createTextNode(vnode)
   }
 
-  const $el = document.createElement(node.type)
-  setProps($el, node.props)
-  addEventListeners($el, node.props)
-  node.children.map(createElement).forEach($el.appendChild.bind($el))
+  const $el = document.createElement(vnode.type)
+  setProps($el, vnode.props)
+  addEventListeners($el, vnode.props)
+  vnode.children.map(createElement).forEach($el.appendChild.bind($el))
   return $el
 }
 
@@ -93,4 +106,5 @@ function render ($target: HTMLElement, vnode: VNode) {
   return ($el = $target.insertBefore(createElement(vnode), $el))
 }
 
-export { h, render, classNames }
+(window as any).h = h
+export { VNode, h, render, classNames }
