@@ -1,6 +1,11 @@
 import { classNames, h, render } from './dom'
 const $app = document.getElementById('app')
 
+enum Keys {
+  ENTER = 13,
+  ESCAPE = 27
+}
+
 const todos = Array.from({ length: 5 }).map((i, j) => ({
   completed: j % 2 === 0,
   editing: false,
@@ -17,23 +22,33 @@ const store = {
 const itemsLeft = todos =>
   todos.reduce((sum, { completed }) => (completed ? sum : sum + 1), 0)
 
-const TodoItem = ({ editing, completed, label, value }) => (
-  <li class={classNames({ completed, editing })}>
-    <div class='view'>
-      <input class='toggle' type='checkbox' checked />
-      <label>{label}</label>
-      <button class='destroy' />
-    </div>
-    <input class='edit' value={value} />
-  </li>
-)
+const onclick = () => {
+  alert('Hellooooo')
+}
+function addTodo (e: KeyboardEvent) {
+  if (e.keyCode === Keys.ENTER) {
+    console.log(this, 'ENTER: add Todo')
+    // Remove the cursor from the input when you hit enter just like if it
+    // were a real form
+    // this.blur();
+  }
+}
+
+const update = () => render($app, View({ todos: todos }))
+const i = 0
+document.getElementById('reload').addEventListener('click', update)
+
+requestAnimationFrame(update)
+
+// ======== VIEW ==========
+//
 
 const View = ({ todos }) => (
   <div class='app-container'>
     <section class='todoapp'>
-      <header class='header' onClick={onclick}>
+      <header class='header'>
         <h1>todos</h1>
-        <input class='new-todo' autofocus={true} placeholder='What needs to be done?' />
+        <input onkeypress={addTodo} class='new-todo' autofocus={true} placeholder='What needs to be done?' />
       </header>
 
       <section class='main'>
@@ -65,8 +80,13 @@ const View = ({ todos }) => (
   </div>
 )
 
-const update = () => render($app, View({ todos: todos }))
-const i = 0
-document.getElementById('reload').addEventListener('click', update)
-
-update()
+const TodoItem = ({ editing, completed, label, value }) => (
+  <li class={classNames({ completed, editing })}>
+    <div class='view'>
+      <input class='toggle' type='checkbox' checked />
+      <label>{label}</label>
+      <button class='destroy' />
+    </div>
+    <input class='edit' value={value} />
+  </li>
+)

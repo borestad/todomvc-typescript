@@ -6,8 +6,6 @@ import { classNames, h } from './dom'
 const itemsLeft = todos =>
   todos.reduce((sum, { completed }) => (completed ? sum : sum + 1), 0)
 
-// This footer should hidden by default and shown when there are todos
-
 const TodoItem = ({ editing, completed, label, value }) => (
   <li class={classNames({ completed, editing })}>
     <div class='view'>

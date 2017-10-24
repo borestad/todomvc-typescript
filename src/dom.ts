@@ -18,18 +18,11 @@ class VNode {
     this.props = props
     this.children = children
   }
-  VNode: true
 }
 
 function h (type: string | Function, props?: any, ...stack: any[]) {
   const children = []
   let c
-  console.log(arguments.length)
-
-  if (props != null && !isObject(props)) {
-    props = void 0
-    stack = [...arguments].slice(1)
-  }
 
   (props = props || {}).children && delete props.children
   stack.length > 1 && stack.reverse()
@@ -45,19 +38,23 @@ function h (type: string | Function, props?: any, ...stack: any[]) {
 }
 
 function classNames (classNames?: string | Object, obj?: Object) {
-  isObject(classNames) ? ([ obj, classNames ] = [ classNames, '' ]) : ([obj] = [{}])
+  isObject(classNames) ?
+    [ obj, classNames ] = [ classNames, '' ] :
+    [obj] = [{}]
 
   return (`${classNames} ` +
     entries(obj)
-      .filter(([ , val ]) => val && typeof val === 'boolean')
-      .map(([className]) => className)
+      .filter(([ , val ]) => true === val)
+      .map(([name]) => name)
       .join(' ')
   ).trim()
 }
 
 const removeElement = ($el: HTMLElement) => {
-  let c
-  while ((c = $el.firstChild)) $el.removeChild(c)
+  let child
+  while (child = $el.firstChild) {
+    $el.removeChild(child)
+  }
 }
 
 function isEventProp (value?) {
@@ -72,20 +69,20 @@ function setProp ($el: HTMLElement, name: string, value) {
 }
 
 function setProps ($el: HTMLElement, props: Object) {
-  entries(props).forEach(([ p, v ]) => setProp($el, p, v))
-}
-
-function addEventListeners ($el: HTMLElement, props: Object) {
-  const events = entries(props).filter(([k]) => isEventProp(k))
-
-  for (const [ event, handler ] of events) {
-    on(toEventName(event), $el)(handler)
+  for (const [ prop, val ] of entries(props)) {
+    setProp($el, prop, val)
   }
 }
 
-const on = (type: string, $el: HTMLElement) => (fn: EventListener) => {
-  $el.addEventListener(type, fn, true)
-  return () => $el.removeEventListener(type, fn, true)
+function addEventListeners ($el: HTMLElement, props: Object) {
+  for (const name of keys(props).filter(isEventProp))
+    on(toEventName(name), $el)(props[name])
+}
+
+function on (type: string, $el: HTMLElement) {
+  return (fn: EventListener) => {
+    $el.addEventListener(type, fn, true)
+  }
 }
 
 function createElement (vnode: VNode | string): HTMLElement | Text {
@@ -96,7 +93,11 @@ function createElement (vnode: VNode | string): HTMLElement | Text {
   const $el = document.createElement(vnode.type)
   setProps($el, vnode.props)
   addEventListeners($el, vnode.props)
-  vnode.children.map(createElement).forEach($el.appendChild.bind($el))
+
+  for (const $child of vnode.children.map(createElement)) {
+    $el.appendChild.call($el, $child)
+  }
+
   return $el
 }
 
@@ -107,4 +108,4 @@ function render ($target: HTMLElement, vnode: VNode) {
 }
 
 (window as any).h = h
-export { VNode, h, render, classNames }
+export { VNode, h, render, classNames, isObject }
