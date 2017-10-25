@@ -58,9 +58,7 @@ const View = ({ todos }) => (
       </section>
 
       <footer class='footer'>
-        <span class='todo-count'>
-          <strong>{itemsLeft(todos)}</strong> item left
-        </span>
+        <TodoCounter todos={todos}/>
         {/* <!-- Remove this if you don't implement routing --> */}
         <ul class='filters'>
           <li><a href='#/' class='selected'>All</a></li>
@@ -72,11 +70,7 @@ const View = ({ todos }) => (
       </footer>
     </section>
 
-    <footer class='info'>
-      <p>Double-click to edit a todo</p>
-      <p>Created by <a href='https://github.com/borestad'>Johan Borestad</a></p>
-      <p>Part of <a href='http://todomvc.com'>TodoMVC</a></p>
-    </footer>
+    <FooterInfo />
   </div>
 )
 
@@ -89,4 +83,18 @@ const TodoItem = ({ editing, completed, label, value }) => (
     </div>
     <input class='edit' value={value} />
   </li>
+)
+
+const TodoCounter = ({ todos }) => (
+  <span class='todo-count'>
+    <strong>{itemsLeft(todos)}</strong> item left
+  </span>
+
+)
+const FooterInfo = () => (
+  <footer class='info'>
+  <p>Double-click to edit a todo</p>
+  <p>Created by <a href='https://github.com/borestad'>Johan Borestad</a></p>
+  <p>Part of <a href='http://todomvc.com'>TodoMVC</a></p>
+</footer>
 )

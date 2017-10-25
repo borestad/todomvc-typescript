@@ -5,6 +5,7 @@
         "tslint-react"
     ],
     "rules": {
+        "no-conditional-assignment": false,
         "array-bracket-spacing": [
             true,
             "always",

@@ -1,10 +1,20 @@
 import { h, VNode } from '../dom'
-import { classNames, isObject } from '../dom'
+import { classNames, isEventProp, isObject } from '../dom'
 
-test('.isObject(', () => {
+test('.isObject()', () => {
   expect(isObject({})).toEqual(true)
   expect(isObject([])).toEqual(false)
   expect(isObject(null)).toEqual(false)
+})
+
+test('.isEventProp()(', () => {
+  expect(isEventProp('onCreate')).toEqual('oncreate')
+
+  const falsy = [ false, null, true, [], {}, undefined, '', 1, 0, 'foo' ]
+  falsy.forEach(v => {
+    expect(isEventProp(v)).toEqual(false)
+  })
+
 })
 
 describe('.classNames()', () => {
