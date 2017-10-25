@@ -18,14 +18,20 @@ function memoize<R, T extends (...args: any[]) => R> (fn: T): T {
 /**
  * isObject
  */
-const isObject = v => v != null && typeof v === 'object' && !isArray(v)
+const isObject = v =>
+  v != null && typeof v === 'object' && !isArray(v)
+
+/**
+ * toEventName
+ */
+const toEventName = (s: string) =>
+  s.slice(2).toLowerCase()
 
 /**
  * isEventProp
  */
-export const isEventProp = memoize((v?) =>
-'on' === ''.slice.call(v || '', 0, 2) && v.toLowerCase()
-)
+export const isEventProp = (v?) =>
+  'on' === ''.slice.call(v || '', 0, 2) && v.toLowerCase()
 
 /**
  * VNode
@@ -64,7 +70,7 @@ function h (type: string | Function, props?: any, ...children: any[]) {
 /**
  * classNames
  */
-const classNames = memoize((classNames?: string | KV, obj?: KV) => {
+const classNames = (classNames?: string | KV, obj?: KV) => {
   isObject(classNames) ?
     [ obj, classNames ] = [ classNames as KV, '' ] :
     [obj] = [{}]
@@ -72,7 +78,7 @@ const classNames = memoize((classNames?: string | KV, obj?: KV) => {
   return (`${classNames} `
     + entries(obj).reduce((name, [ k, v ]) =>
       v === true ? `${name} ${k}` : '', '')).trim()
-})
+}
 
 /**
  * setProp
@@ -96,7 +102,7 @@ function createElement (vnode: VNode): Element | Text {
     setProp($el, prop, val)
 
   for (const name of keys(vnode.props).filter(isEventProp))
-    $el.addEventListener(name, vnode.props[name], true)
+    $el.addEventListener(toEventName(name), vnode.props[name], true)
 
   for (const $child of vnode.children.map(createElement))
     $el.appendChild.call($el, $child)

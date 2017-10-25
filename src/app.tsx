@@ -1,12 +1,37 @@
 import { classNames, h, render } from './dom'
 const $app = document.getElementById('app')
 
+const initialState = [{
+  text: 'Vanilladux',
+  completed: false,
+  id: 0
+}]
+
+let store = [...initialState]
+
+// TODO: use store.dispatch
+// http://redux.js.org/docs/api/Store.html#dispatch
+const dispatch = (fn) =>
+  document.dispatchEvent(new CustomEvent('action', {
+    detail: fn
+  }))
+
+const reducers = (state, action) =>
+  todoReducer(state, action)
+
+document.addEventListener('action', function (e) {
+  console.log('action happened', e)
+  store = reducers(store, (e as any).detail)
+  console.log(store)
+  document.dispatchEvent(new CustomEvent('state'))
+}, false)
+
 enum Keys {
   ENTER = 13,
   ESCAPE = 27
 }
-
-const todos = Array.from({ length: 5 }).map((i, j) => ({
+// ==============================================================
+const todos2 = Array.from({ length: 5 }).map((i, j) => ({
   completed: j % 2 === 0,
   editing: false,
   label: Math.random()
@@ -15,33 +40,94 @@ const todos = Array.from({ length: 5 }).map((i, j) => ({
   value: 'Rule the web'
 }))
 
-const store = {
-  todos: todos
+const store2 = {
+  todos: todos2
 }
 
-const itemsLeft = todos =>
-  todos.reduce((sum, { completed }) => (completed ? sum : sum + 1), 0)
-
+// Controller
+// ==============================================================
 const onclick = () => {
   alert('Hellooooo')
 }
+
 function addTodo (e: KeyboardEvent) {
   if (e.keyCode === Keys.ENTER) {
-    console.log(this, 'ENTER: add Todo')
-    // Remove the cursor from the input when you hit enter just like if it
-    // were a real form
-    // this.blur();
+    const text = (e.target as HTMLInputElement).value.trim()
+    dispatch(Actions.addTodo(text))
   }
 }
 
-const update = () => render($app, View({ todos: todos }))
+const update = () => render($app, View({ todos: store }))
+document.addEventListener('state', (e) => update())
 const i = 0
 document.getElementById('reload').addEventListener('click', update)
 
 requestAnimationFrame(update)
 
-// ======== VIEW ==========
-//
+// ========================================================
+// Actions
+// ========================================================
+export const Actions = {
+  addTodo: text => ({ type: 'ADD_TODO', text }),
+  deleteTodo: id => ({ type: 'DELETE_TODO', id }),
+  editTodo: (id, text) => ({ type: 'EDIT_TODO', id, text }),
+  completeTodo: id => ({ type: 'COMPLETE_TODO', id }),
+  completeAll: () => ({ type: 'COMPLETE_ALL' }),
+  clearCompleted: () => ({ type: 'CLEAR_COMPLETED' })
+}
+
+// ========================================================
+// Reducer
+// ========================================================
+function todoReducer (state = initialState, action) {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return [
+        ...state, {
+          id: state.reduce((maxId, todo) => Math.max(todo.id, maxId), -1) + 1,
+          completed: false,
+          text: action.text
+        }
+      ]
+
+    case 'DELETE_TODO':
+      return state.filter(todo =>
+        todo.id !== action.id
+      )
+
+    case 'EDIT_TODO':
+      return state.map(todo =>
+        todo.id === action.id ?
+          { ...todo, text: action.text } :
+          todo
+      )
+
+    case 'COMPLETE_TODO':
+      return state.map(todo =>
+        todo.id === action.id ?
+          { ...todo, completed: !todo.completed } :
+          todo
+      )
+
+    case 'COMPLETE_ALL':
+      const areAllMarked = state.every(todo => todo.completed)
+      return state.map(todo => ({
+        ...todo,
+        completed: !areAllMarked
+      }))
+
+    case 'CLEAR_COMPLETED':
+      return state.filter(todo => todo.completed === false)
+
+    default:
+      return state
+  }
+}
+// ========================================================
+// VIEW
+// ========================================================
+const itemsLeft = todos =>
+  todos.reduce((sum, { completed }) => (completed ? sum : sum + 1), 0)
 
 const View = ({ todos }) => (
   <div class='app-container'>
@@ -74,11 +160,11 @@ const View = ({ todos }) => (
   </div>
 )
 
-const TodoItem = ({ editing, completed, label, value }) => (
+const TodoItem = ({ editing, completed, text, value }) => (
   <li class={classNames({ completed, editing })}>
     <div class='view'>
       <input class='toggle' type='checkbox' checked />
-      <label>{label}</label>
+      <label>{text}</label>
       <button class='destroy' />
     </div>
     <input class='edit' value={value} />
