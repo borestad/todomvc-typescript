@@ -22,7 +22,7 @@
     "removeComments": true,
     "sourceMap": false,
     "strictNullChecks": false,
-    "target": "es6",
+    "target": "es5",
     "types": ["node", "jest"],
     "allowJs": false,
     "importHelpers": true,

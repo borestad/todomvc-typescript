@@ -8,7 +8,7 @@ test('.isObject()', () => {
 })
 
 test('.isEventProp()(', () => {
-  expect(isEventProp('onCreate')).toEqual('oncreate')
+  expect(isEventProp('onCreate')).toEqual(true)
 
   const falsy = [ false, null, true, [], {}, undefined, '', 1, 0, 'foo' ]
   falsy.forEach(v => {
