@@ -1,5 +1,8 @@
 // import *  from './constants'
 
+export interface ICustomEvent extends CustomEvent {
+  detail: any
+}
 export interface IAction {
   type: any
   [extraProps: string]: any
