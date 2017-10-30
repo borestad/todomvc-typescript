@@ -1,16 +1,9 @@
 // tslint:disable:jsx-no-lambda
-import { classNames, dispatch, h, loadState, render, wrap } from './dom'
+import { classNames, dispatch, h, loadState, render, Router } from './dom'
 import { ITodo, ITodoModel } from './index.d'
 import { View } from './view'
 const doc = document
 const $app = doc.getElementById('app')
-
-const log = (callback, args, name, type) => {
-  console.log('Starting  ', type, name)
-  const result = callback()
-  console.log('Ended: ', name)
-  return result
-}
 
 let store = [
   ...(loadState() || [
@@ -22,35 +15,6 @@ let store = [
     }
   ])
 ]
-
-const update = () =>
-  render(
-    doc.getElementById('app'),
-    View({ todos: store, Controller: (new Controller()) })
-  )
-
-requestAnimationFrame(update)
-
-// TODO: use store.dispatch
-// http://redux.js.org/docs/api/Store.html#dispatch
-
-const reducers = (state, action) => todoReducer(state, action)
-
-// ==============================================================
-// Event listeners
-// ==============================================================
-
-doc.addEventListener('state', update)
-
-doc.addEventListener(
-  'action',
-  e => {
-    store = reducers(store, (e as any).detail)
-    localStorage.store = JSON.stringify(store)
-    doc.dispatchEvent(new CustomEvent('state'))
-  },
-  false
-)
 
 // ==============================================================
 // Model
@@ -67,65 +31,49 @@ const COMPLETE_ALL = 'COMPLETE_ALL'
 const CLEAR_COMPLETED = 'CLEAR_COMPLETED'
 const EDIT_TODO = 'EDIT_TODO'
 
-// ==============================================================
-// Actions
-// ==============================================================
-
 // ========================================================
 // Controller (~ Actions in Redux)
 // ========================================================
-const Actions = {
-  addTodo: text => ({ type: ADD_TODO, text }),
-  completeTodo: id => ({ type: COMPLETE_TODO, id }),
-  deleteTodo: id => ({ type: DELETE_TODO, id }),
-  completeAll: () => ({ type: COMPLETE_ALL }),
-  clearCompleted: () => ({ type: CLEAR_COMPLETED })
-}
 
-@wrap(log)
 export class Controller {
   // key: string
   todos: ITodo[]
+  view
 
   constructor () {
-    // this.namespace = namespace
     this.todos = []
-    // this.view = null
+    this.render = this.render.bind(this)
+
+    doc.addEventListener('state', this.render)
   }
 
-  @wrap(log)
-  onAddTodo (e: KeyboardEvent) {
-    return (e) => {
-      if (e.keyCode === 13) {
-        const text = (e.target as HTMLInputElement).value.trim()
-        text.length && dispatch(Actions.addTodo(text))
-      }
-    }
-  }
-  onCompleteTodo (id) {
-    dispatch(Actions.completeTodo(id))
-  }
-  onDeleteTodo (id) {
-    dispatch(Actions.deleteTodo(id))
+  addTodo (text: string) {
+    return text.length && dispatch({ type: ADD_TODO, text })
   }
 
-  onCompleteAll () {
-    dispatch(Actions.completeAll())
+  completeTodo (id) {
+    return dispatch({ type: COMPLETE_TODO, id })
   }
 
-  onClearCompleted () {
-    dispatch(Actions.clearCompleted())
+  deleteTodo (id) {
+    return dispatch({ type: DELETE_TODO, id })
   }
 
-  // public subscribe (onChange) {
-  //   this.onChanges.push(onChange)
-  // }
+  completeAll () {
+    return dispatch({ type: COMPLETE_ALL })
+  }
 
-  // public inform () {
-  //   Utils.store(this.key, this.todos)
-  //   this.onChanges.forEach(function (cb) { cb() })
-  // }
-  render () {}
+  clearCompleted () {
+    return dispatch({ type: CLEAR_COMPLETED })
+  }
+
+  render () {
+    render(doc.getElementById('app'),
+      this.view = View({
+        todos: store,
+        fn: this
+      }))
+  }
 
   //   public toggleAll (checked: Boolean) {
   //       // Note: It's usually better to use immutable data structures since they're
@@ -175,12 +123,15 @@ export class Controller {
 }
 
 function todoReducer (state, action) {
+  const eqfilter = t => t.id === action.id
+  const { map, filter } = state
+
   switch (action.type) {
     case ADD_TODO:
       return [
         ...state,
         {
-          id: Math.max(...state.map(t => t.id)) + 1,
+          id: ~~Math.max(...state.map(t => t.id)) + 1,
           completed: false,
           text: action.text
         }
@@ -190,25 +141,65 @@ function todoReducer (state, action) {
       return state.filter(t => t.id !== action.id)
 
     case EDIT_TODO:
-      return state.map(
+      return map(
         t => (t.id === action.id ? { ...t, text: action.text } : t)
       )
 
     case COMPLETE_TODO:
-      return state.map(
+      return map(
         t => (t.id === action.id ? { ...t, completed: !t.completed } : t)
       )
 
     case COMPLETE_ALL:
-      return state.map(t => ({
+      return map(t => ({
         ...t,
         completed: !state.every(t => t.completed)
       }))
 
     case CLEAR_COMPLETED:
-      return state.filter(t => t.completed === false)
+      return filter(t => t.completed === false)
 
     default:
       return state
   }
 }
+
+const c = new Controller()
+; (window as any).c = c
+
+const R = Router('/')
+R.onChange(path => {
+  console.log('new path', path)
+})
+
+R.go('/completed')
+// const router = new Router({
+//   // cb: (path) => {
+//   //   console.log('my cb', path)
+//   //   c.render()
+//   // }
+// })
+
+// ; (window as any).router = router
+
+requestAnimationFrame(c.render)
+
+// TODO: use store.dispatch
+// http://redux.js.org/docs/api/Store.html#dispatch
+
+const reducers = (state, action) =>
+  todoReducer(state, action)
+
+// ==============================================================
+// Event listeners
+// ==============================================================
+
+doc.addEventListener(
+  'action',
+  (e: CustomEvent) => {
+    store = reducers(store, e.detail)
+    localStorage.store = JSON.stringify(store)
+    doc.dispatchEvent(new CustomEvent('state'))
+  },
+  false
+)

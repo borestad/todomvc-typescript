@@ -14,6 +14,8 @@ export default {
     typescript({
       typescript: require('typescript')
     }),
-    uglify({}, minify)
+    uglify({
+
+    }, minify)
   ]
 }

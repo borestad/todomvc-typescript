@@ -1,0 +1,114 @@
+import {Controller as IController } from './app'
+import { classNames, h, tags } from './dom'
+// Optimization for the compiler
+// tslint:disable:jsx-wrap-multiline
+// tslint:disable:jsx-key
+
+const { div, section, header, input, label, ul, footer, li, p, h1 } = tags(
+  'div',
+  'section',
+  'header',
+  'input',
+  'label',
+  'ul',
+  'footer',
+  'li',
+  'p',
+  'h1'
+)
+
+interface IView {
+  todos: any
+  fn: IController
+}
+
+export const View = props => {
+  const { fn, todos } = props
+  const { addTodo, clearCompleted, completeAll, completeTodo, deleteTodo } = fn
+
+  const onAddTodo = (e: KeyboardEvent) => {
+    if (e.keyCode === 13) {
+      addTodo((e.target as HTMLInputElement).value.trim())
+    }
+  }
+
+  const Container = () =>
+    div(
+      { class: 'app-container' },
+      section(
+        { class: 'todoapp' },
+        header(
+          { class: 'header' },
+          h1(null, 'todos'),
+          input({
+            onkeypress: onAddTodo,
+            class: 'new-todo',
+            autofocus: true,
+            placeholder: 'What needs to be done?'
+          })
+        ),
+        section(
+          { class: 'main' },
+          input({ id: 'toggle-all', class: 'toggle-all', type: 'checkbox' }),
+          label({ for: 'toggle-all' }, 'Mark all as complete'),
+          ul({ class: 'todo-list' }, todos.map(TodoItem))
+        ),
+        footer(
+          { class: 'footer' },
+          h(TodoCounter, { todos: todos }),
+          ul(
+            { class: 'filters' },
+            li(null, h('a', { href: '#/', class: 'selected' }, 'All')),
+            li(null, h('a', { href: '#/active' }, 'Active')),
+            li(null, h('a', { href: '#/completed' }, 'Completed'))
+          ),
+          true &&
+            h(
+              'button',
+              { class: 'clear-completed', onClick: clearCompleted },
+              'Clear completed'
+            )
+        )
+      ),
+      h(
+        'footer',
+        { class: 'info' },
+        h('p', null, 'Double-click to edit a todo'),
+        h(
+          'p',
+          null,
+          'Created by ',
+          h('a', { href: 'https://github.com/borestad' }, 'Johan Borestad')
+        ),
+        h('p', null, 'Part of ', h('a', { href: 'http://todomvcom' }, 'TodoMVC'))
+      )
+    )
+  const TodoItem = ({ id, editing, completed, text, value }) =>
+    h(
+      'li',
+      { key: id, class: classNames({ completed, editing }) },
+      h(
+        'div',
+        { class: 'view' },
+        h('input', {
+          class: 'toggle',
+          type: 'checkbox',
+          checked: completed,
+          onChange: completeTodo.bind(null, id)
+        }),
+        h('label', null, text),
+        h('button', { class: 'destroy', onClick: deleteTodo.bind(null, id) })
+      ),
+      h('input', { class: 'edit', value: value })
+    )
+  const itemsLeft = todos =>
+    todos.reduce((sum, { completed }) => (completed ? sum : sum + 1), 0)
+  const TodoCounter = props =>
+    h(
+      'span',
+      { class: 'todo-count' },
+      h('strong', null, itemsLeft(props.todos)),
+      ' item left'
+    )
+  return Container()
+}

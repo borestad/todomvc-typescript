@@ -18,8 +18,14 @@ test('.isEventProp()(', () => {
 })
 
 describe('.classNames()', () => {
+
   test('should work', () => {
-    expect(classNames('foo')).toEqual('foo')
+    expect(
+      classNames({
+        completed: true,
+        editing: false
+      }))
+    .toEqual('completed')
   })
 
   test('should properly merge class names and ignore non booleans', () => {

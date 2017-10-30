@@ -34,7 +34,7 @@ export function toEventName (s: string) {
  * isEventProp
  */
 export function isEventProp (v) {
-  return 'on' === ''.slice.call(v || '', 0, 2)
+  return /^on/.test(v)
 }
 
 /**
@@ -57,7 +57,7 @@ export class VNode {
 export function h (type: string | Function, props?: any, ...children: any[]) {
   const stack = []
   let c
-  ; (props = props || {}).children && (props.children = void 0)
+  (props = props || {}).children && (props.children = void 0)
   children.length > 1 && children.reverse()
 
   while (children.length && (c = children.pop())) {
@@ -73,17 +73,10 @@ export function h (type: string | Function, props?: any, ...children: any[]) {
 /**
  * classNames
  */
-export const classNames = (classNames?: string | KV, obj?: KV) => {
-  isObject(classNames)
-    ? ([ obj, classNames ] = [ classNames as KV, '' ])
-    : ([obj] = [{}])
-
-  return (`${classNames} ` +
-    entries(obj).reduce(
-      (name, [ k, v ]) => (v === true ? `${name} ${k}` : ''),
-      ''
-    )
-  ).trim()
+export const classNames = (obj?: KV) => {
+  return entries(obj)
+    .reduce((name, [ k, v ]) => (v === true ? `${name} ${k}` : name), '')
+    .trim()
 }
 
 /**
@@ -91,7 +84,7 @@ export const classNames = (classNames?: string | KV, obj?: KV) => {
  */
 export function setProp ($el: Element, name: string, value) {
   if (isEventProp(name) || (name === 'class' && !value)) return
-  if (typeof value === 'boolean') $el[name] = value
+  if (value === false || value === true) $el[name] = value
   $el.setAttribute(name, value)
 }
 
@@ -127,12 +120,11 @@ export function render ($el: HTMLElement, vnode: VNode) {
   return ($node = $el.insertBefore(createElement(vnode), $node))
 }
 
-export const dispatch = fn =>
-  doc.dispatchEvent(
-    new CustomEvent('action', {
-      detail: fn.call ? fn() : fn
-    })
-  )
+export const dispatch = o => {
+  const ev = new CustomEvent('action', { detail: o.call ? o() : o })
+  doc.dispatchEvent(ev)
+  return ev.detail
+}
 
 export const loadState = () => {
   try {
@@ -142,21 +134,32 @@ export const loadState = () => {
   }
 }
 
-export function wrap (fn: Function): Function {
-  return (target, key, descriptor: TypedPropertyDescriptor<any>) => {
-    if (target.call) {
-      return ((...a) => _ =>
-        fn.call(this, () => new target(a), a, target.name, 'class')
-      ).call(this)
-    } else {
-      const Fn = descriptor.value
-      descriptor.value = (...a) => (_ =>
-        fn.call(this, () => Fn.apply(self, a), a, key, 'function')
-      ).call(this)
+export function tags<K extends string> (...type: K[]): {[P in K] } {
+  const tags: any = {}
 
-      return descriptor
-    }
+  for (const tag of type) {
+    tags[tag] = h.bind(null, tag) as Function
+  }
+
+  return tags as {[P in K]
   }
 }
 
-export const curry = (fn, ...args1) => (...args2) => fn(...args1, ...args2)
+export const Router = (root) => {
+  const q = []
+
+  const go = (route) => {
+    location.hash = route
+    emit()
+    return path()
+  }
+
+  const path = () => location.hash.slice(1) || root
+  const isActive = route => route === path()
+  const onChange = (fn) => q.push(fn)
+  const emit = () => q.forEach(cb => cb(path()))
+
+  window.onhashchange = emit
+
+  return { go, path, isActive, onChange }
+}

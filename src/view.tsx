@@ -1,5 +1,6 @@
 import { Controller as IController } from './app'
 import { classNames, h } from './dom'
+
 // Optimization for the compiler
 // tslint:disable:jsx-wrap-multiline
 // tslint:disable:jsx-key
@@ -10,12 +11,18 @@ import { classNames, h } from './dom'
 
 interface IView {
   todos: any
-  Controller: IController
+  fn: IController
 }
 
-export const View = (props: IView) => {
-  const { Controller, todos } = props
-  const { onAddTodo, onClearCompleted, onCompleteAll, onCompleteTodo, onDeleteTodo, render } = Controller
+export const View = (props) => {
+  const { fn, todos } = props
+  const { addTodo, clearCompleted, completeAll, completeTodo, deleteTodo } = fn
+
+  const onAddTodo = (e: KeyboardEvent) => {
+    if (e.keyCode === 13) {
+      addTodo((e.target as HTMLInputElement).value.trim())
+    }
+  }
 
   const Container = () => (
     <div class='app-container'>
@@ -32,7 +39,7 @@ export const View = (props: IView) => {
 
         <section class='main'>
           <input id='toggle-all' class='toggle-all' type='checkbox' />
-          <label for='toggle-all'>Mark all as complete</label>
+          <label for='toggle-all' onClick={completeAll} >Mark all as complete</label>
           <ul class='todo-list'>{todos.map(TodoItem)}</ul>
         </section>
 
@@ -53,7 +60,7 @@ export const View = (props: IView) => {
             </li>
           </ul>
           {/* <!-- Hidden if no completed items are left ↓ --> */}
-          {true && <button class='clear-completed' onClick={onClearCompleted}>Clear completed</button>}
+          {true && <button class='clear-completed' onClick={clearCompleted}>Clear completed</button>}
         </footer>
       </section>
 
@@ -76,12 +83,12 @@ export const View = (props: IView) => {
           class='toggle'
           type='checkbox'
           checked={completed}
-          onChange={onCompleteTodo.bind(null, id)}
+          onChange={completeTodo.bind(null, id)}
         />
         <label>{text}</label>
         <button
           class='destroy'
-          onClick={onDeleteTodo.bind(null, id)}
+          onClick={deleteTodo.bind(null, id)}
         />
       </div>
       <input class='edit' value={value} />
