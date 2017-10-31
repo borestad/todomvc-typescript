@@ -21,7 +21,6 @@ class Todo {
 // let s, store = [].concat(
 //   (s = window.localStorage.store) ? parse(s) : new Todo("VanillaDux")
 // )
-let store = [new Todo("Hello world")]
 
 // VIEW ---------------------------------------------------
 export const View = ({ fn, todos }) => {
@@ -96,15 +95,13 @@ export const Controller = () => {
 
   let fn; return fn = {
     init: () => {
-      model = new TodoModel(store)
+      model = new TodoModel()
       R.onChange(c.render)
 
       doc.addEventListener("state", fn.render)
 
       doc.addEventListener("action", (e: CustomEvent) => {
-        store = reducers(store, e.detail)
-        window.localStorage.store = stringify(store)
-        notifyState()
+        reducers(model.store, e.detail)
       })
 
       notifyState()
@@ -131,7 +128,7 @@ export const Controller = () => {
     ),
     render: () =>
       _render(doc.getElementById("app"),
-        View({ fn, todos: store }))
+        View({ fn, todos: model.todos }))
   }
 }
 
@@ -140,37 +137,43 @@ class TodoModel {
   public onChanges: Array<any>
   public state: any
 
-  constructor (_store?) {
-    this.state = _store || store
+  constructor (store?) {
+    let s
+    this.todos = store || (s = localStorage.store) ? parse(s).todos : [new Todo("Hello world")]
   }
 
   save (newState) {
-    return this.state = newState
+    this.todos = newState
+    window.localStorage.store = stringify({
+      todos: this.todos
+    })
+    notifyState()
+    return this.todos
   }
   addTodo ({ title }) {
     return this.save([
-      ...this.state, new Todo(title)
+      ...this.todos, new Todo(title)
     ])
   }
   deleteTodo ({ id }) {
     return this.save(
-      this.state.filter(todo => todo.id !== id)
+      this.todos.filter(todo => todo.id !== id)
     )
   }
   completeTodo ({ id }) {
     return this.save(
-      this.state.map(t => t.id === id ?
+      this.todos.map(t => t.id === id ?
         { ...t, completed: !t.completed } : t)
     )
   }
   completeAll () {
     return this.save(
-      this.state.map(t => ({ ...t, completed: !this.state.every(t => t.completed) }))
+      this.todos.map(t => ({ ...t, completed: !this.todos.every(t => t.completed) }))
     )
   }
   clearCompleted () {
     return this.save(
-      this.state.map(t => ({ ...t, completed: !this.state.every(t => t.completed) }))
+      this.todos.map(t => ({ ...t, completed: !this.todos.every(t => t.completed) }))
     )
   }
 
