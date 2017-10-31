@@ -40,24 +40,24 @@
 //       id: Utils.uuid(),
 //       title: title,
 //       completed: false
-//     });
+//     })
 
 //     this.inform();
 //   }
 
-//   public toggleAll(checked : Boolean) {
+//   public toggleAll(checked: Boolean) {
 //     // Note: It's usually better to use immutable data structures since they're
 //     // easier to reason about and React works very well with them. That's why
 //     // we use map(), filter() and reduce() everywhere instead of mutating the
 //     // array or todo items themselves.
-//     this.todos = this.todos.map<ITodo>((todo : ITodo) => {
-//       return Utils.extend({}, todo, {completed: checked});
+//     this.todos = this.todos.map<ITodo>((todo: ITodo) => {
+//       return Utils.extend({}, todo, {completed: checked})
 //     })
 
 //     this.inform()
 //   }
 
-//   public toggle(todoToToggle: ITodo) {
+//   public toggle (todoToToggle: ITodo) {
 //     this.todos = this.todos.map<ITodo>((todo: ITodo) => {
 //       return todo !== todoToToggle ?
 //         todo :
@@ -67,7 +67,7 @@
 //     this.inform()
 //   }
 
-//   public destroy(todo: ITodo) {
+//   public destroy (todo: ITodo) {
 //     this.todos = this.todos.filter(function (candidate) {
 //       return candidate !== todo
 //     })
@@ -77,7 +77,7 @@
 
 //   public save (todoToSave: ITodo, text: string) {
 //     this.todos = this.todos.map(function (todo) {
-//       return todo !== todoToSave ? todo : Utils.extend({}, todo, {title: text})
+//       return todo !== todoToSave ? todo : Utils.extend({}, todo, { title: text })
 //     })
 
 //     this.inform()

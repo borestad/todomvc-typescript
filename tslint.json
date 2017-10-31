@@ -5,6 +5,7 @@
         "tslint-react"
     ],
     "rules": {
+        "one-variable-per-declaration": false,
         "no-conditional-assignment": false,
         "array-bracket-spacing": [
             true,

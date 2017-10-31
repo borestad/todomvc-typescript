@@ -49,3 +49,50 @@ describe('.classNames()', () => {
     ).toEqual('m-n o')
   })
 })
+
+// describe('.parseSelector()', () => {
+
+//   test('case1', () => {
+
+//     expect(parseSelector('div')).toEqual({
+//       type: 'div'
+//     })
+
+//     expect(parseSelector('.bar')).toEqual({
+//       type: 'div',
+//       class: 'bar'
+//     })
+
+//     expect(parseSelector('#bar')).toEqual({
+//       type: 'div',
+//       id: 'bar'
+//     })
+
+//     expect(parseSelector('p')).toEqual({
+//       type: 'p'
+//     })
+
+//     expect(parseSelector('p.bar.baz')).toEqual({
+//       type: 'p',
+//       class: 'bar baz'
+//     })
+
+//     expect(parseSelector('p#foo.bar.baz')).toEqual({
+//       type: 'p',
+//       class: 'bar baz',
+//       id: 'foo'
+//     })
+
+//     expect(parseSelector('#foo.bar.baz')).toEqual({
+//       type: 'div',
+//       class: 'bar baz',
+//       id: 'foo'
+//     })
+
+//     expect(parseSelector('foo.bar')).toEqual({
+//       type: 'foo',
+//       class: 'bar'
+//     })
+
+//   })
+// })

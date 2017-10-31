@@ -22,12 +22,12 @@ const cnames = ({
 
 // add tests
 suite
-// .add('h', () => {
-//   lorem(h)
-// })
-.add('classnames1', () => {
-  classNames(cnames)
+.add('h', () => {
+  lorem(h)
 })
+// .add('classnames1', () => {
+//   classNames(cnames)
+// })
 // add listeners
 .on('cycle', function (event) {
   console.log(String(event.target))

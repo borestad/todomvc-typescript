@@ -1,5 +1,5 @@
 // tslint:disable:no-empty
-import { View } from '../view'
+import { View } from '../app'
 
 const $$ = (context: HTMLElement) => (selector: string) =>
   context.querySelectorAll(selector)

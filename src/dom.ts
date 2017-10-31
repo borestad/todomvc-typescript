@@ -1,41 +1,12 @@
 type KV = {[key: string]: any}
 
 const { entries, keys } = Object
-const { isArray } = Array
-const doc = document
+const doc = typeof document === 'undefined' ? null : document
 
-/**
- * memoize
- */
-// export function memoize<R, T extends (...args: any[]) => R> (fn: T): T {
-//   const c = {}
-//   let k
-//   return ((...args) => {
-//     k = args.length === 1 ? args[0] : JSON.stringify(args)
-//     return c[k] || (c[k] = fn.call(null, ...args))
-//   }) as T
-// }
-
-/**
- * isObject
- */
-export function isObject (v) {
-  return v != null && typeof v === 'object' && !isArray(v)
-}
-
-/**
- * toEventName
- */
-export function toEventName (s: string) {
-  return (s || '').slice(2).toLowerCase()
-}
-
-/**
- * isEventProp
- */
-export function isEventProp (v) {
-  return /^on/.test(v)
-}
+export const isObject = v => v != null && typeof v === 'object' && !Array.isArray(v)
+export const isBoolean = v => v === false || v === true
+export const toEventName = (s = '') => s.slice(2).toLowerCase()
+export const isEventProp = v => /^on/.test(v)
 
 /**
  * VNode
@@ -51,13 +22,9 @@ export class VNode {
   }
 }
 
-/**
- * h
- */
 export function h (type: string | Function, props?: any, ...children: any[]) {
-  const stack = []
-  let c
-  (props = props || {}).children && (props.children = void 0)
+  let c, stack = [];
+  (props = props || {}).children && delete props.children
   children.length > 1 && children.reverse()
 
   while (children.length && (c = children.pop())) {
@@ -70,93 +37,55 @@ export function h (type: string | Function, props?: any, ...children: any[]) {
     : new VNode(type, props, stack)
 }
 
-/**
- * classNames
- */
-export const classNames = (obj?: KV) => {
-  return entries(obj)
-    .reduce((name, [ k, v ]) => (v === true ? `${name} ${k}` : name), '')
+export const classNames = (obj: KV) =>
+  entries(obj)
+    .reduce((s, [ k, v ]) => (v === true ? `${s} ${k}` : s), '')
     .trim()
-}
 
-/**
- * setProp
- */
 export function setProp ($el: Element, name: string, value) {
   if (isEventProp(name) || (name === 'class' && !value)) return
-  if (value === false || value === true) $el[name] = value
-  $el.setAttribute(name, value)
+  $el.setAttribute(name, isBoolean(value) ? $el[name] = value : value)
 }
 
-/**
- * createElement
- */
 export function createElement (vnode: VNode): Element | Text {
   if ((vnode as any).charAt) return doc.createTextNode(vnode as any)
 
   const $el = doc.createElement(vnode.type)
 
-  for (const [ prop, val ] of entries(vnode.props)) {
-    setProp($el, prop, val)
-  }
+  entries(vnode.props).forEach(([ p, v ] ) => {
+    setProp($el, p, v)
+    isEventProp(p) && $el.addEventListener(toEventName(p), v, true)
+  })
 
-  for (const name of keys(vnode.props).filter(isEventProp)) {
-    $el.addEventListener(toEventName(name), vnode.props[name], true)
-  }
-
-  for (const $child of vnode.children.map(createElement)) {
-    $el.appendChild.call($el, $child)
-  }
+  vnode.children.map(createElement).forEach($child =>
+    $el.appendChild.call($el, $child))
 
   return $el
 }
 
-/**
- * render
- */
 export function render ($el: HTMLElement, vnode: VNode) {
-  let $node
-  $el.firstChild && $el.removeChild($el.firstChild)
+  let $node, child
+  (child = $el.firstChild) && $el.removeChild(child)
   return ($node = $el.insertBefore(createElement(vnode), $node))
 }
 
 export const dispatch = o => {
   const ev = new CustomEvent('action', { detail: o.call ? o() : o })
-  doc.dispatchEvent(ev)
-  return ev.detail
-}
-
-export const loadState = () => {
-  try {
-    return JSON.parse(localStorage.getItem('store')) as any
-  } catch (e) {
-    console.error(e)
-  }
-}
-
-export function tags<K extends string> (...type: K[]): {[P in K] } {
-  const tags: any = {}
-
-  for (const tag of type) {
-    tags[tag] = h.bind(null, tag) as Function
-  }
-
-  return tags as {[P in K]
-  }
+  return doc.dispatchEvent(ev) && ev.detail
 }
 
 export const Router = (root) => {
-  const q = []
+  const q = [], loc = location
 
-  const go = (route) => {
-    location.hash = route
+  const go = (route = root) => {
+    loc.hash = route
     emit()
     return path()
   }
 
-  const path = () => location.hash.slice(1) || root
+  const path = () => loc.hash.slice(1) || root
   const isActive = route => route === path()
-  const onChange = (fn) => q.push(fn)
+  const onChange = fn => q.push(fn)
   const emit = () => q.forEach(cb => cb(path()))
 
   window.onhashchange = emit
