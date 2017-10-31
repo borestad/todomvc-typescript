@@ -1,25 +1,15 @@
 type KV = {[key: string]: any}
 
 const { entries, keys } = Object
-const doc = typeof document === 'undefined' ? null : document
+const doc = typeof document === "undefined" ? null : document
 
-export const isObject = v => v != null && typeof v === 'object' && !Array.isArray(v)
+export const isObject = v => v != null && typeof v === "object" && !Array.isArray(v)
 export const isBoolean = v => v === false || v === true
-export const toEventName = (s = '') => s.slice(2).toLowerCase()
+export const toEventName = (s = "") => s.slice(2).toLowerCase()
 export const isEventProp = v => /^on/.test(v)
 
-/**
- * VNode
- */
-export class VNode {
-  type: string
-  props: KV
-  children: any[]
-  constructor (type, props, children) {
-    this.type = type
-    this.props = props
-    this.children = children
-  }
+export class Vnode {
+  type: string; props: KV; children: any[]
 }
 
 export function h (type: string | Function, props?: any, ...children: any[]) {
@@ -29,25 +19,24 @@ export function h (type: string | Function, props?: any, ...children: any[]) {
 
   while (children.length && (c = children.pop())) {
     if (c.pop) children.push(...(c.length > 1 ? c.reverse() : c))
-    else if (true !== c) stack.push(c.toFixed ? '' + c : c)
+    else if (true !== c) stack.push(c.toFixed ? "" + c : c)
   }
 
   return (type as Function).call
     ? (type as Function)(props, (props.children = stack))
-    : new VNode(type, props, stack)
+    : { type, props, children: stack } as Vnode
 }
 
 export const classNames = (obj: KV) =>
-  entries(obj)
-    .reduce((s, [ k, v ]) => (v === true ? `${s} ${k}` : s), '')
-    .trim()
+  "".trim.call(entries(obj)
+    .reduce((s, [ k, v ]) => v === true ? `${s} ${k}` : s, ""))
 
 export function setProp ($el: Element, name: string, value) {
-  if (isEventProp(name) || (name === 'class' && !value)) return
+  if (isEventProp(name) || (name === "class" && !value)) return
   $el.setAttribute(name, isBoolean(value) ? $el[name] = value : value)
 }
 
-export function createElement (vnode: VNode): Element | Text {
+export function createElement (vnode: Vnode): Element | Text {
   if ((vnode as any).charAt) return doc.createTextNode(vnode as any)
 
   const $el = doc.createElement(vnode.type)
@@ -57,20 +46,18 @@ export function createElement (vnode: VNode): Element | Text {
     isEventProp(p) && $el.addEventListener(toEventName(p), v, true)
   })
 
-  vnode.children.map(createElement).forEach($child =>
-    $el.appendChild.call($el, $child))
-
+  vnode.children.map(createElement).forEach($el.appendChild.bind($el))
   return $el
 }
 
-export function render ($el: HTMLElement, vnode: VNode) {
+export function render ($el: HTMLElement, vnode: Vnode) {
   let $node, child
   (child = $el.firstChild) && $el.removeChild(child)
   return ($node = $el.insertBefore(createElement(vnode), $node))
 }
 
-export const dispatch = o => {
-  const ev = new CustomEvent('action', { detail: o.call ? o() : o })
+export const createDispatcher = name => (data?) => {
+  const ev = new CustomEvent(name, { detail: (data && data.call) ? data() : data })
   return doc.dispatchEvent(ev) && ev.detail
 }
 
@@ -92,3 +79,7 @@ export const Router = (root) => {
 
   return { go, path, isActive, onChange }
 }
+
+// export const createStore ({ reducers, defaultState, middleware? }) => {
+
+// }

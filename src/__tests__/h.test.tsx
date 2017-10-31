@@ -1,4 +1,4 @@
-import { h, VNode } from '../dom'
+import { h } from '../dom'
 
 const buildVNode = (type?, props?, children = []) => ({
   type,

@@ -1,4 +1,4 @@
-import { h, VNode } from '../dom'
+import { h } from '../dom'
 
 test('empty vnode', () => {
   expect(h('div')).toEqual({

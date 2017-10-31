@@ -1,4 +1,4 @@
-import { h, VNode } from '../dom'
+import { h } from '../dom'
 import { classNames, isEventProp, isObject } from '../dom'
 
 test('.isObject()', () => {
